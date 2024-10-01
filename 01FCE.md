@@ -99,6 +99,8 @@ a2 = np.array([1,2,3])
 a1+a2 
 ```
 
+Python tutorial: https://www.w3schools.com/python/ 
+
 **Task [FCE1-08] - Load the data**
 
 ```

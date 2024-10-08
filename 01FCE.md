@@ -1,4 +1,4 @@
-# Introduction
+# Miniproject 1: Fuel Consumption Estimation
 
 This file contains some notes related to the miniproject titled "Fuel Consumption Estimation".
 

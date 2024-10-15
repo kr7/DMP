@@ -465,3 +465,5 @@ class ConsumptionNet(nn.Module):
     x = torch.relu(self.hidden(x))
     return self.out(x)
 ```
+
+TO BE CONTINUED...

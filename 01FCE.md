@@ -1,6 +1,7 @@
 # Miniproject 1: Fuel Consumption Estimation
 
 This file contains some notes related to the miniproject titled "Fuel Consumption Estimation".
+You can execute the codes in this file in Google Colab ( https://colab.research.google.com/ ).
 
 # Sprint 1: Business Understanding 
 
@@ -146,3 +147,149 @@ Distinct values and their counts:
 ```
 data.groupby("air conditioner").count()["date"]
 ```
+
+
+
+
+# Sprint 2: Data Preprocessing
+
+
+# Sprint 3: Visualization
+
+Import necessary libraries:
+
+```
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+import warnings
+warnings.filterwarnings('ignore')
+```
+
+Load the data:
+
+```
+data = pd.read_csv('http://www.biointelligence.hu/mi/fuel_data.txt', header=0, sep='\t')
+```
+
+Histogram:
+
+```
+data['starttemp'].hist();
+```
+
+```
+data['starttemp'].hist( bins=5 );
+```
+
+```
+data['starttemp'].hist( bins=( 5, 10, 15, 20, 25, 30) );
+```
+
+![histogram](https://github.com/user-attachments/assets/eda9db38-0624-44db-9078-2e54f670f2d3)
+
+
+Bar chart and pie chart: 
+
+```
+ac_on = (data['air conditioner'] == "on").sum()
+ac_off = (data['air conditioner'] == "off").sum()
+plt.bar( [1,2], [ac_on, ac_off], tick_label=['AC on', 'AC off'], color=["b","g"]);
+```
+
+![bar_chart](https://github.com/user-attachments/assets/2427be38-92d0-47cd-8ede-405ddfe794f2)
+
+
+```
+plt.pie( [ac_on, ac_off], labels=['AC on','AC off']);
+```
+
+![pie_chart](https://github.com/user-attachments/assets/40c307c4-36a2-4f10-abf0-7dcc9ee5e9a5)
+
+
+Percentiles and interquartile range of "starttemp" (and other columns):
+
+```
+p25 = np.percentile(data["starttemp"], 25)
+p75 = np.percentile(data["starttemp"], 75)
+interquartile_range = np.percentile(data["starttemp"], 75) - np.percentile(data["starttemp"], 25)
+```
+
+Boxplot: 
+
+```
+plt.boxplot(data['starttemp'], notch=True);
+```
+
+```
+plt.boxplot( [ data[(data['fuel type']=='95FS') & (data['avg.cons.']<10)]['avg.cons.'],
+               data[(data['fuel type']=='95+') & (data['avg.cons.']<10)]['avg.cons.']],
+             labels = ['95FS', '95+'] );
+```
+
+![boxplot](https://github.com/user-attachments/assets/93c91419-25f8-4f7b-8f69-a0bd743ad3f3)
+
+
+
+Scatter plot - simple example:
+
+```
+x = [1, 4, 10, 15]
+y = [2, 3, 8, 9]
+plt.scatter(x,y, marker='x')
+```
+
+More scatter plots:
+
+```
+plt.scatter( data[data['avg.cons.']<10]['speed'], data[data['avg.cons.']<10]['avg.cons.']);
+```
+
+```
+relevant_data = pd.DataFrame(data[data['avg.cons.']<10])
+relevant_data.reset_index()
+
+colors = []
+for tr in relevant_data['trafic']:
+  if tr == 'low':
+    colors.append('g')
+  elif tr == 'normal':
+    colors.append('b')
+  else:
+    colors.append('r')
+
+plt.scatter( relevant_data['speed'], relevant_data['avg.cons.'], c = colors);
+```
+
+![scatterplot](https://github.com/user-attachments/assets/1348ee4e-e2d3-4c7f-92c9-3fb01f23115c)
+
+
+
+```
+data['temp'] = (data['starttemp']+data['endtemp'])/2
+
+from mpl_toolkits.mplot3d import Axes3D
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+
+colors = []
+for i in range(len(data)):
+  if data['fuel type'][i]=='95+':
+    colors.append('r')
+  else:
+    colors.append('b')
+
+for j in range(len(data)):
+  if data['trafic'][j] == 'low':
+    ax.scatter(data['speed'][j], data['avg.cons.'][j],
+              data['temp'][j], c = colors[j], marker = 'o')
+  elif data['trafic'][j] == 'normal':
+    ax.scatter(data['speed'][j], data['avg.cons.'][j],
+              data['temp'][j], c = colors[j], marker = 'x')
+  else:
+    ax.scatter(data['speed'][j], data['avg.cons.'][j],
+              data['temp'][j], c = colors[j], marker = '^')
+plt.show();
+```
+
+![scatterplot3d](https://github.com/user-attachments/assets/8da92e06-6bfc-4c85-907c-11222f98bb2e)

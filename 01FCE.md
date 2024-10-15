@@ -149,9 +149,140 @@ data.groupby("air conditioner").count()["date"]
 ```
 
 
-
-
 # Sprint 2: Data Preprocessing
+
+Import pandas and load the data:
+
+```
+import pandas as pd
+data = pd.read_csv("http://www.biointelligence.hu/mi/fuel_data_with_errors.txt", sep="\t", header=0)
+```
+
+**Task [FCE2-01] Handle missing values**
+
+Print the number of missing values for each column:
+
+```
+for column in list(data):
+  number_of_missing_values = data[column].isnull().sum()
+  print(f"{number_of_missing_values} {column}")
+```
+
+Print the number of different values for a column (in the example, for the "trafic" column):
+
+```
+data.groupby("trafic").count()["date"]
+```
+
+What to do with missing values? Replace by 
+- zero,
+- a random value (between the minimum and maximum of that column),
+- average (mean),
+- median?
+
+The aforementioned basic statistics (min, max, mean, median...) can be calculated like this: 
+
+```
+data['starttemp'].min()
+data['starttemp'].max()
+data['starttemp'].mean()
+data['starttemp'].median()
+```
+
+Replace missing values of "starttemp" by the median of the column and store the resulting dataset in a new dataframe:
+
+```
+data1 = data.copy()
+data1.loc[data1['starttemp'].isnull(), 'starttemp'] = data1['starttemp'].median()
+```
+
+Check that there are no more missing values: 
+
+```
+data1['starttemp'].isnull().sum()
+```
+
+The missing values in other columns may be replaced by the medians of those columns in the same way.
+
+
+But, is it a good idea to replace the missing values of "starttemp" by the median of the column?
+Note that "starttemp" and "endtemp" highly correlate and they are never missing at the same time:
+
+```
+import matplotlib.pyplot as plt
+valid_values = data['endtemp']<100
+plt.scatter( data['starttemp'][valid_values], data['endtemp'][valid_values] );
+```
+
+Whenever "starttemp" is missing, we can replace it by the value of endtemp:
+
+```
+data2 = data.copy()
+data2.loc[data2['starttemp'].isnull(), 'starttemp'] = data2['endtemp']
+```
+
+Similarly, we can replace the missing values of "endtemp" as well.
+
+But the actual difference between starttemp and endtemp depends on the time.
+In order to examine that, we will create a new column into which we extract the first two letters of "starttime",
+and another column for the difference of the temperatures and we plot the median difference for each hour of the day:
+
+```
+data['hour'] = 0
+for i in range(len(data)):
+  data.loc[i, 'hour'] = data['starttime'][i][0:2]
+
+data['temp_diff'] = data['endtemp']-data['starttemp']
+
+data.groupby('hour')['temp_diff'].median().plot()
+```
+
+Finally, we can replace the missing values using that observed median difference:
+
+```
+median_difference_by_hour = data.groupby('hour')['temp_diff'].median()
+
+for i in range(len(data)):
+  if data['starttemp'].isnull()[i]:
+    data.loc[i, 'starttemp'] = data['endtemp'][i]-median_difference_by_hour[ data['hour'][i] ]
+```
+
+We can replace the missing values of "endtemp" similarly.
+
+**[FCE2-02] Deduplication**
+
+In this miniproject, we will only elimate exact duplicates. (In this dataset, there are no approximate duplicates.)
+
+```
+def same_as_next(i):
+  for column in list(data):
+    if data[column][i] != data[column][i+1]:
+      return False
+  return True
+
+keep = []
+for i in range(len(data)-1):
+  keep.append(not same_as_next(i))
+keep.append(True)
+
+data_dedup = pd.DataFrame(data[keep])
+```
+
+**[FCE2-03] Handling inconsistent values**
+
+The column "air conditioner" has contains some inconsistent values: 
+
+```
+data.groupby("air conditioner").count()["date"]
+```
+
+We will correct them: 
+
+```
+data.loc[ data['air conditioner']=='offf', 'air conditioner' ] = 'off'
+```
+
+Other errors ("typos") of the same column and other columns may be corrected similarly. 
 
 
 # Sprint 3: Visualization

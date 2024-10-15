@@ -424,3 +424,44 @@ plt.show();
 ```
 
 ![scatterplot3d](https://github.com/user-attachments/assets/8da92e06-6bfc-4c85-907c-11222f98bb2e)
+
+# Sprint 4: Training a neural network for fuel consumption estimation
+
+Import necessary libraries: 
+
+```
+import torch
+import torch.nn as nn
+import torch.optim as optim
+import pandas as pd
+import numpy as np
+```
+
+Load and select the data:
+
+```
+data = pd.read_csv('http://www.biointelligence.hu/mi/fuel_data.txt', header=0, sep='\t')
+
+selected_data = pd.DataFrame()
+selected_data['starttemp'] = data['starttemp']
+selected_data['endtemp'] = data['endtemp']
+selected_data['speed'] = data['speed']
+train_data = np.array(selected_data)
+train_labels = np.array( [ [y] for y in data['avg.cons.']])
+```
+
+**Please note: in order to have a statistically unbiased estimation of the quality (accuracy) of the neural network, we have to evaluate it on COMPLETELY NEW data that has never been used for anything during the process of training the network (including the selection of the best model if we train several models).** For simplicity, in this miniproject, we use all the data to train the network and we will NOT evaluate its accuracy.
+
+Define a class that represents our neural network:
+
+```
+class ConsumptionNet(nn.Module):
+  def __init__(self):
+    super(ConsumptionNet, self).__init__()
+    self.hidden = nn.Linear(3, 10)
+    self.out = nn.Linear(10, 1)
+
+  def forward(self, x):
+    x = torch.relu(self.hidden(x))
+    return self.out(x)
+```

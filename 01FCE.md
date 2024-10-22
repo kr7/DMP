@@ -489,7 +489,7 @@ for epoch in range(1000):
     optimizer.step()
 ```
 
-In this miniproject, our "system" (app) is a simple HTML page, we want to "integrate" the neural network into this HTML page:
+In this miniproject, our "app" is a simple HTML page. We want to "integrate" the neural network into this HTML page:
 
 FCE.html:
 
@@ -535,8 +535,8 @@ FCE.html:
 </html>
 ```
 
-In order to be able to reproduce the calcuations that the trained neural network does, we need to know that a neural network consists of **units** and each unit performs
-a weighted sum of the inputs or the outputs of other units. Of course, we also need to know the actual weights of the trained neural network.
+In order to be able to reproduce the calcuations that the trained neural network does, we need to know that a neural network consists of **nodes** or **units** that are organized into layers and each unit performs
+a weighted sum of its inputs. An *input of a unit* is either one of the inputs of the network or the outputs of another unit, called *activation*. Of course, we also need to know the actual weights of the trained neural network.
 The following code can be used to print the weights of the trained neural network:
 
 ```
@@ -544,3 +544,175 @@ for p in net.parameters():
   print(p)
 ```
 
+The output of the above code is something like this (but not exactly the same as the numbers below, because each time we train the network, the training starts from a different random initialization):
+
+```
+Parameter containing:
+tensor([[ 0.2509, -0.2061,  0.1073],
+        [-0.2059, -0.2937, -0.1009],
+        [ 0.1150,  0.2625, -0.3610],
+        [ 0.6465, -0.2293,  0.4714],
+        [ 0.3817,  0.4118, -0.5667],
+        [-0.3119, -0.4398,  0.0307],
+        [ 0.0666,  0.1040,  0.1719],
+        [ 0.3125,  0.1885, -0.3690],
+        [ 0.1097,  0.7307, -0.4844],
+        [-0.3408, -0.2709,  0.0361]], requires_grad=True)
+Parameter containing:
+tensor([-0.2061,  0.4432,  0.1330, -0.2794, -0.1213, -0.1389, -0.5187,  0.2188,
+        -0.4756, -0.1425], requires_grad=True)
+Parameter containing:
+tensor([[-0.1407, -0.0554,  0.1907,  0.1611,  0.6042,  0.1442, -0.0315,  0.3453,
+          0.6535, -0.2172]], requires_grad=True)
+Parameter containing:
+tensor([0.3992], requires_grad=True)
+```
+
+Our neural network has 
+
+- an input layer containing 3 units,
+- a hidden layer containing 10 units, and
+- an output layer that contains a single unit.
+
+The nodes in the input layer do not perform any computations, they just represent the input data, i.e., the values of (a) starttemp, (b) endtemp and (c) average speed. Each unit of the hidden layer calcuates a weighted sum of inputs and adds a number to this weighted sum. The weights used in the calculation of the weighted sum can be seen in the above tensors. Let us consider the first raw of the first tensor and the first value of the second tensor, that is:
+
+```
+Parameter containing:
+tensor([[ 0.2509, -0.2061,  0.1073],
+       ... )
+Parameter containing:
+tensor([-0.2061, ... ], requires_grad=True)
+...
+```
+
+This means that the first hidden unit calculates the following weighted sum:
+
+```
+first hidden unit = 0.2509*starttemp + (-0.2061)*endtemp + 0.1073*speed + (-0.2061)
+```
+
+Because our activation function is ReLU, if the above weighted sum is negative, the activation of the hidden unit will be set to 0 (zero), otherwise the activation will be same as the above weighted sum.
+
+The activations of the other hidden units may be calculated similarly. 
+
+In particular, considering the weights in the first two tensors, the activations of the hidden units can be calculated by the following JavaScript code: 
+
+```
+    h1  =  0.2509*input1 - 0.2061*input2 + 0.1073*input3 - 0.2061;
+    h2  = -0.2059*input1 - 0.2937*input2 - 0.1009*input3 + 0.4432;
+    h3  =  0.1150*input1 + 0.2625*input2 - 0.3610*input3 + 0.1330;
+    h4  =  0.6465*input1 - 0.2293*input2 + 0.4714*input3 - 0.2794;
+    h5  =  0.3817*input1 + 0.4118*input2 - 0.5667*input3 - 0.1213;
+    h6  = -0.3119*input1 - 0.4398*input2 + 0.0307*input3 - 0.1389;
+    h7  =  0.0666*input1 + 0.1040*input2 + 0.1719*input3 - 0.5187;
+    h8  =  0.3125*input1 + 0.1885*input2 - 0.3690*input3 + 0.2188;
+    h9  =  0.1097*input1 + 0.7307*input2 - 0.4844*input3 - 0.4756;
+    h10 = -0.3408*input1 - 0.2709*input2 + 0.0361*input3 - 0.1425;
+
+    if (h1 < 0) { h1 = 0; }
+    if (h2 < 0) { h2 = 0; }
+    if (h3 < 0) { h3 = 0; }
+    if (h4 < 0) { h4 = 0; }
+    if (h5 < 0) { h5 = 0; }
+    if (h6 < 0) { h6 = 0; }
+    if (h7 < 0) { h7 = 0; }
+    if (h8 < 0) { h8 = 0; }
+    if (h9 < 0) { h9 = 0; }
+    if (h10 < 0) { h10 = 0; }
+```
+
+Let us consider the last two tensors:
+
+```
+...
+Parameter containing:
+tensor([[-0.1407, -0.0554,  0.1907,  0.1611,  0.6042,  0.1442, -0.0315,  0.3453,
+          0.6535, -0.2172]], requires_grad=True)
+Parameter containing:
+tensor([0.3992], requires_grad=True)
+```
+
+Based on these weights, the output of the network can be calculated as follows: 
+
+```
+out = -0.1407*h1 - 0.0554*h2 + 0.1907*h3 + 0.1611*h4 + 0.6042*h5 + 0.1442*h6 - 0.0315*h7 + 0.3453*h8 + 0.6535*h9 - 0.2172*h10 + 0.3992;
+```
+
+Putting all this together, our "app" with the code that reproduces the calculations of the neural network looks as follows: 
+
+FCE.html:
+
+```
+<html>
+<head>
+<title>
+  Fuel consumption estimation
+</title>
+</head>
+
+<script type="text/javascript">
+  function estimate_cons() {
+    input1 = window.document.input_data.temp1.value;
+    input2 = window.document.input_data.temp2.value;
+    input3 = window.document.input_data.speed.value;
+
+    h1  =  0.2509*input1 - 0.2061*input2 + 0.1073*input3 - 0.2061;
+    h2  = -0.2059*input1 - 0.2937*input2 - 0.1009*input3 + 0.4432;
+    h3  =  0.1150*input1 + 0.2625*input2 - 0.3610*input3 + 0.1330;
+    h4  =  0.6465*input1 - 0.2293*input2 + 0.4714*input3 - 0.2794;
+    h5  =  0.3817*input1 + 0.4118*input2 - 0.5667*input3 - 0.1213;
+    h6  = -0.3119*input1 - 0.4398*input2 + 0.0307*input3 - 0.1389;
+    h7  =  0.0666*input1 + 0.1040*input2 + 0.1719*input3 - 0.5187;
+    h8  =  0.3125*input1 + 0.1885*input2 - 0.3690*input3 + 0.2188;
+    h9  =  0.1097*input1 + 0.7307*input2 - 0.4844*input3 - 0.4756;
+    h10 = -0.3408*input1 - 0.2709*input2 + 0.0361*input3 - 0.1425;
+
+    if (h1 < 0) { h1 = 0; }
+    if (h2 < 0) { h2 = 0; }
+    if (h3 < 0) { h3 = 0; }
+    if (h4 < 0) { h4 = 0; }
+    if (h5 < 0) { h5 = 0; }
+    if (h6 < 0) { h6 = 0; }
+    if (h7 < 0) { h7 = 0; }
+    if (h8 < 0) { h8 = 0; }
+    if (h9 < 0) { h9 = 0; }
+    if (h10 < 0) { h10 = 0; }
+
+    out = -0.1407*h1 - 0.0554*h2 + 0.1907*h3 + 0.1611*h4 + 0.6042*h5 + 0.1442*h6 - 0.0315*h7 + 0.3453*h8 + 0.6535*h9 - 0.2172*h10 + 0.3992;
+
+    window.alert("Becsült fogyasztás: "+out)
+  }
+</script>
+
+<body>
+<h1>Fuel consumption estimation<h1>
+<form name="input_data">
+<table>
+<tr>
+  <td>Starttemp:</td>
+  <td><input type="text" name="temp1" size=3></td>
+</tr>
+<tr>
+  <td>Endtemp:</td>
+  <td><input type="text" name="temp2" size=3></td>
+</tr>
+<tr>
+  <td>Average speed:</td>
+  <td><input type="text" name="speed" size=3></td>
+</tr>
+<tr>
+  <td></td>
+  <td><input type="button" onclick="estimate_cons()" value="Calculate"></td>
+</tr>
+</table>
+</form>
+</body>
+</html>
+```
+
+# Closing Remarks
+
+In this example, we "translated" a neural network into a JavaScript code. Similarly, neural networks may be translated to the language of a specific (embedded) system, such as that of a car. The idea is as follows: 
+
+- training a neural network may be performed conveniently on a plattform like Google Colab,
+- once a neural network has been trained, the calculations performed by the trained neural network may be reproduced in the language of the application (the target system into which the neural network should be integrated).

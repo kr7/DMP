@@ -466,4 +466,81 @@ class ConsumptionNet(nn.Module):
     return self.out(x)
 ```
 
-TO BE CONTINUED...
+Training the neural network:
+
+```
+train_dataset = torch.utils.data.TensorDataset(
+    torch.Tensor(train_data), torch.Tensor(train_labels) )
+trainloader = torch.utils.data.DataLoader(
+    train_dataset, shuffle=True, batch_size=1)
+
+net = ConsumptionNet()
+criterion = nn.MSELoss()
+optimizer = optim.SGD(net.parameters(), lr=1e-5)
+
+for epoch in range(1000):
+  for inputs, targets in trainloader:
+    optimizer.zero_grad()
+
+    outputs = net(inputs)
+
+    loss = criterion(outputs, targets)
+    loss.backward()
+    optimizer.step()
+```
+
+In this miniproject, our "system" (app) is a simple HTML page, we want to "integrate" the neural network into this HTML page:
+
+FCE.html:
+
+```
+<html>
+<head>
+<title>
+  Fuel consumption estimation
+</title>
+</head>
+
+<script type="text/javascript">
+  function estimate_cons() {
+    /* we will insert the code here that will reproduce the calculations that
+       the neural network does */
+    window.alert("Not implemented yet.")
+  }
+</script>
+
+<body>
+<h1>Fuel consumption estimation<h1>
+<form name="input_data">
+<table>
+<tr>
+  <td>Starttemp:</td>
+  <td><input type="text" name="temp1" size=3></td>
+</tr>
+<tr>
+  <td>Endtemp:</td>
+  <td><input type="text" name="temp2" size=3></td>
+</tr>
+<tr>
+  <td>Average speed:</td>
+  <td><input type="text" name="speed" size=3></td>
+</tr>
+<tr>
+  <td></td>
+  <td><input type="button" onclick="estimate_cons()" value="Calculate"></td>
+</tr>
+</table>
+</form>
+</body>
+</html>
+```
+
+In order to be able to reproduce the calcuations that the trained neural network does, we need to know that a neural network consists of **units** and each unit performs
+a weighted sum of the inputs or the outputs of other units. Of course, we also need to know the actual weights of the trained neural network.
+The following code can be used to print the weights of the trained neural network:
+
+```
+for p in net.parameters():
+  print(p)
+```
+

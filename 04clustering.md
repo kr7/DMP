@@ -55,7 +55,7 @@ data[:,3] = data_in_frame['petal width']
 ... and define the functions that are referenced:
 
 ```
-# In fact, the initial centroids are NOT* fixed in case of k-Means,
+# In fact, the initial centroids are NOT fixed in case of k-Means,
 # but we fix them in this example, so that we can study how the result
 # changes with different selection of initial centroids
 def initial_centroids(data, num_clusters):
@@ -67,7 +67,7 @@ def calculate_clusters_of_instances(data, centroids):
 def calculate_new_centroids(data, clusters_of_instances, num_clusters):
   new_centroids = np.zeros( (num_clusters, len(data[0])) )
   for c in range(num_clusters):
-    new_centroids[c,:] = np.mean(data[clusters_of_instances==c])
+    new_centroids[c,:] = np.mean(data[clusters_of_instances==c], axis=0)
   return new_centroids
 ```
 

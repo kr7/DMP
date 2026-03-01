@@ -378,7 +378,7 @@ plt.scatter( data[data['avg.cons.']<10]['speed'], data[data['avg.cons.']<10]['av
 
 ```
 relevant_data = pd.DataFrame(data[data['avg.cons.']<10])
-relevant_data.reset_index()
+relevant_data = relevant_data.reset_index()
 
 colors = []
 for tr in relevant_data['trafic']:
